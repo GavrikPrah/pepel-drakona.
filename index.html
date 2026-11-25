@@ -4,12 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ПЕПЕЛ ДРАКОНА</title>
-    <!-- Подключаем шрифты -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400&display=swap" rel="stylesheet">
     
-    <!-- Подключаем Supabase -->
+    <!-- Подключение Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
@@ -103,7 +102,6 @@
             color: #888;
         }
 
-        /* Модальное окно входа/регистрации */
         .modal {
             display: none;
             position: fixed;
@@ -183,13 +181,13 @@
         <h1>ПЕПЕЛ ДРАКОНА</h1>
         <div class="epigraph">"Не ищите друзей и тем более любовь в Долине Тлеющих Костей..."</div>
         
-        <!-- Кнопки в зависимости от статуса входа -->
         <div id="auth-buttons">
             <button class="btn" onclick="openModal('login')">Войти</button>
             <button class="btn btn-secondary" onclick="openModal('register')">Регистрация</button>
         </div>
 
         <div id="game-buttons" style="display: none;">
+            <!-- ИСПРАВЛЕНО: ссылка ведет на game.html -->
             <a href="game.html" class="btn">Открыть Главу 1</a>
             <button class="btn btn-secondary" onclick="logout()">Выйти</button>
             <div class="user-info">Вы вошли как: <span id="user-name">...</span></div>
@@ -203,7 +201,6 @@
 
     <div class="footer">Автор: Гаврик Никодимович Прах</div>
 
-    <!-- Модальное окно -->
     <div class="modal" id="auth-modal">
         <div class="modal-content">
             <div class="tabs">
@@ -225,36 +222,32 @@
     </div>
 
     <script>
-        // ТВОИ КЛЮЧИ SUPABASE
+        // ВСТАВЬ СВОЙ КЛЮЧ SUPABASE СЮДА (не удаляй кавычки!)
         const SUPABASE_URL = 'https://uhzevhbqsbqfpynbhngr.supabase.co';
-        const SUPABASE_KEY = 'sb_publishable_jixlgSF8EwZ-dxF0u73TGQ_pNlZ-c'; // Вставь свой ключ сюда (тот, что на скрине обвел)
+        const SUPABASE_KEY = 'вставь_сюда_свой_ключ_начинающийся_на_sb_publishable'; 
 
-        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        // Переменная db вместо supabase, чтобы не было конфликта имен
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
         let currentMode = 'login';
 
-        // Проверка сессии при загрузке страницы
         async function checkSession() {
-            const { data: { session } } = await supabase.auth.getSession();
+            const { data: { session } } = await db.auth.getSession();
             updateUI(session);
         }
 
         function updateUI(session) {
             if (session) {
-                // Если вошел
                 document.getElementById('auth-buttons').style.display = 'none';
                 document.getElementById('game-buttons').style.display = 'block';
-                // Берем имя из метаданных, если нет - из email
                 const name = session.user.user_metadata.display_name || session.user.email;
                 document.getElementById('user-name').innerText = name;
             } else {
-                // Если не вошел
                 document.getElementById('auth-buttons').style.display = 'block';
                 document.getElementById('game-buttons').style.display = 'none';
             }
         }
 
-        // Открытие/закрытие окна
         function openModal(mode) {
             switchTab(mode);
             document.getElementById('auth-modal').style.display = 'flex';
@@ -266,7 +259,6 @@
             document.getElementById('auth-form').reset();
         }
 
-        // Переключение вкладок
         function switchTab(mode) {
             currentMode = mode;
             const tabLogin = document.getElementById('tab-login');
@@ -287,7 +279,6 @@
             }
         }
 
-        // Обработка формы
         async function handleAuth(e) {
             e.preventDefault();
             const email = document.getElementById('auth-email').value;
@@ -302,7 +293,7 @@
 
             try {
                 if (currentMode === 'register') {
-                    const { data, error } = await supabase.auth.signUp({
+                    const { data, error } = await db.auth.signUp({
                         email: email,
                         password: password,
                         options: {
@@ -311,7 +302,6 @@
                     });
                     if (error) throw error;
                     
-                    // Если подтверждение почты выключено, сессия создастся сразу
                     if (data.session) {
                         closeModal();
                         updateUI(data.session);
@@ -320,7 +310,7 @@
                         closeModal();
                     }
                 } else {
-                    const { data, error } = await supabase.auth.signInWithPassword({
+                    const { data, error } = await db.auth.signInWithPassword({
                         email: email,
                         password: password
                     });
@@ -338,13 +328,11 @@
             }
         }
 
-        // Выход
         async function logout() {
-            await supabase.auth.signOut();
+            await db.auth.signOut();
             updateUI(null);
         }
 
-        // Запускаем проверку при старте
         checkSession();
     </script>
 </body>
