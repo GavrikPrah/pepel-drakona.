@@ -8,7 +8,6 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400&display=swap" rel="stylesheet">
     
-    <!-- Подключение Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
@@ -187,7 +186,6 @@
         </div>
 
         <div id="game-buttons" style="display: none;">
-            <!-- ИСПРАВЛЕНО: ссылка ведет на game.html -->
             <a href="game.html" class="btn">Открыть Главу 1</a>
             <button class="btn btn-secondary" onclick="logout()">Выйти</button>
             <div class="user-info">Вы вошли как: <span id="user-name">...</span></div>
@@ -222,11 +220,10 @@
     </div>
 
     <script>
-        // ВСТАВЬ СВОЙ КЛЮЧ SUPABASE СЮДА (не удаляй кавычки!)
         const SUPABASE_URL = 'https://uhzevhbqsbqfpynbhngr.supabase.co';
-        const SUPABASE_KEY = 'вставь_сюда_свой_ключ_начинающийся_на_sb_publishable'; 
+        // ВСТАВЬ СВОЙ КЛЮЧ СЮДА (между кавычками!)
+        const SUPABASE_KEY = 'ВСТАВЬ_СЮДА_СВОЙ_ПУБЛИЧНЫЙ_КЛЮЧ'; 
 
-        // Переменная db вместо supabase, чтобы не было конфликта имен
         const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
         
         let currentMode = 'login';
@@ -240,7 +237,9 @@
             if (session) {
                 document.getElementById('auth-buttons').style.display = 'none';
                 document.getElementById('game-buttons').style.display = 'block';
-                const name = session.user.user_metadata.display_name || session.user.email;
+                // Декодируем имя, если оно было закодировано
+                const rawName = session.user.user_metadata.display_name;
+                const name = rawName ? decodeURIComponent(rawName) : session.user.email;
                 document.getElementById('user-name').innerText = name;
             } else {
                 document.getElementById('auth-buttons').style.display = 'block';
@@ -297,7 +296,8 @@
                         email: email,
                         password: password,
                         options: {
-                            data: { display_name: name }
+                            // Кодируем имя, чтобы русские буквы не ломали запрос
+                            data: { display_name: encodeURIComponent(name) }
                         }
                     });
                     if (error) throw error;
