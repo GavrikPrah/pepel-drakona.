@@ -3,57 +3,349 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Пепел Дракона | Архив Гаврика</title>
+    <title>ПЕПЕЛ ДРАКОНА</title>
+    <!-- Подключаем шрифты -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+    
+    <!-- Подключаем Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
+        :root {
+            --bg-color: #0d0b0a;
+            --text-color: #e8e0d8;
+            --accent-color: #c96a3a;
+            --accent-hover: #a8562b;
+            --panel-bg: #1a1614;
+        }
+
         body {
-            background-color: #121212;
-            color: #d4d4d4;
-            font-family: 'Georgia', serif;
-            text-align: center;
             margin: 0;
             padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
             display: flex;
             flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-image: radial-gradient(circle at 50% 0%, #2a1f1a 0%, #0d0b0a 70%);
+        }
+
+        h1, h2, h3 {
+            font-family: 'Cinzel', serif;
+            color: var(--text-color);
+            text-align: center;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 600px;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .epigraph {
+            font-style: italic;
+            color: #999;
+            margin-bottom: 3rem;
+            font-size: 1.1rem;
+            line-height: 1.6;
+        }
+
+        .btn {
+            background-color: var(--accent-color);
+            color: #fff;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2rem;
+            font-family: 'Cinzel', serif;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px;
+            box-shadow: 0 4px 15px rgba(201, 106, 58, 0.2);
+        }
+
+        .btn:hover {
+            background-color: var(--accent-hover);
+            box-shadow: 0 6px 20px rgba(201, 106, 58, 0.4);
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            border: 1px solid #444;
+            color: #aaa;
+            box-shadow: none;
+        }
+
+        .btn-secondary:hover {
+            background-color: #222;
+            border-color: #666;
+            color: #fff;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .user-info {
+            margin-top: 2rem;
+            font-size: 0.9rem;
+            color: #888;
+        }
+
+        /* Модальное окно входа/регистрации */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: rgba(0,0,0,0.8);
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            background-image: radial-gradient(circle, #2a2a2a 0%, #0a0a0a 100%);
+            z-index: 100;
         }
-        h1 {
-            font-size: 3em;
-            color: #8b0000;
-            text-shadow: 2px 2px 5px black;
-            margin-bottom: 10px;
+
+        .modal-content {
+            background-color: var(--panel-bg);
+            padding: 2rem;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 400px;
+            border: 1px solid #333;
         }
-        p {
-            font-size: 1.2em;
-            max-width: 600px;
-            line-height: 1.6;
-            margin-bottom: 30px;
-            font-style: italic;
+
+        .modal-content input {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            background-color: #0a0908;
+            border: 1px solid #333;
+            color: #fff;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
         }
-        .btn {
-            background-color: #8b0000;
-            color: white;
-            padding: 15px 40px;
-            text-decoration: none;
-            font-size: 1.2em;
-            border-radius: 5px;
-            transition: 0.3s;
-            border: 1px solid #500000;
-            box-shadow: 0 0 15px rgba(139, 0, 0, 0.5);
+
+        .modal-content input:focus {
+            outline: none;
+            border-color: var(--accent-color);
         }
-        .btn:hover {
-            background-color: #b30000;
-            box-shadow: 0 0 25px rgba(179, 0, 0, 0.8);
+
+        .tabs {
+            display: flex;
+            margin-bottom: 1.5rem;
+            border-bottom: 1px solid #333;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            color: #888;
+            font-family: 'Cinzel', serif;
+            border-bottom: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: var(--accent-color);
+            border-bottom: 2px solid var(--accent-color);
+        }
+
+        .error-msg {
+            color: #ff5555;
+            font-size: 0.85rem;
+            margin-top: 10px;
+            text-align: center;
+            display: none;
+        }
+
+        .footer {
+            position: absolute;
+            bottom: 20px;
+            font-size: 0.8rem;
+            color: #555;
+            text-align: center;
+            width: 100%;
         }
     </style>
 </head>
 <body>
-    <h1>ПЕПЕЛ ДРАКОНА</h1>
-    <p>"Не ищите друзей и тем более любовь в Долине Тлеющих Костей..."</p>
-    <a href="game.html" class="btn">ОТКРЫТЬ ГЛАВУ 1</a>
-    <br><br>
-    <p style="font-size: 0.9em; color: #666;">Автор: Гаврик Никодимович Прах</p>
+
+    <div class="container">
+        <h1>ПЕПЕЛ ДРАКОНА</h1>
+        <div class="epigraph">"Не ищите друзей и тем более любовь в Долине Тлеющих Костей..."</div>
+        
+        <!-- Кнопки в зависимости от статуса входа -->
+        <div id="auth-buttons">
+            <button class="btn" onclick="openModal('login')">Войти</button>
+            <button class="btn btn-secondary" onclick="openModal('register')">Регистрация</button>
+        </div>
+
+        <div id="game-buttons" style="display: none;">
+            <a href="game.html" class="btn">Открыть Главу 1</a>
+            <button class="btn btn-secondary" onclick="logout()">Выйти</button>
+            <div class="user-info">Вы вошли как: <span id="user-name">...</span></div>
+        </div>
+        
+        <div style="margin-top: 3rem;">
+            <h3 style="font-size: 1.2rem; color: #777; margin-bottom: 10px;">Скоро</h3>
+            <span style="color: #555; font-size: 0.9rem;">Достижения | Соцсети</span>
+        </div>
+    </div>
+
+    <div class="footer">Автор: Гаврик Никодимович Прах</div>
+
+    <!-- Модальное окно -->
+    <div class="modal" id="auth-modal">
+        <div class="modal-content">
+            <div class="tabs">
+                <div class="tab" id="tab-login" onclick="switchTab('login')">Вход</div>
+                <div class="tab" id="tab-register" onclick="switchTab('register')">Регистрация</div>
+            </div>
+            
+            <form id="auth-form" onsubmit="handleAuth(event)">
+                <div id="name-field" style="display: none;">
+                    <input type="text" id="reg-name" placeholder="Имя героя">
+                </div>
+                <input type="email" id="auth-email" placeholder="Email" required>
+                <input type="password" id="auth-password" placeholder="Пароль" required>
+                <button type="submit" class="btn" style="width: 100%; margin: 15px 0 0 0;" id="submit-btn">Войти</button>
+                <div class="error-msg" id="auth-error"></div>
+            </form>
+            <button class="btn btn-secondary" style="width: 100%; margin: 10px 0 0 0; font-size: 0.9rem; padding: 10px;" onclick="closeModal()">Отмена</button>
+        </div>
+    </div>
+
+    <script>
+        // ТВОИ КЛЮЧИ SUPABASE
+        const SUPABASE_URL = 'https://uhzevhbqsbqfpynbhngr.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_jixlgSF8EwZ-dxF0u73TGQ_pNlZ-c'; // Вставь свой ключ сюда (тот, что на скрине обвел)
+
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        
+        let currentMode = 'login';
+
+        // Проверка сессии при загрузке страницы
+        async function checkSession() {
+            const { data: { session } } = await supabase.auth.getSession();
+            updateUI(session);
+        }
+
+        function updateUI(session) {
+            if (session) {
+                // Если вошел
+                document.getElementById('auth-buttons').style.display = 'none';
+                document.getElementById('game-buttons').style.display = 'block';
+                // Берем имя из метаданных, если нет - из email
+                const name = session.user.user_metadata.display_name || session.user.email;
+                document.getElementById('user-name').innerText = name;
+            } else {
+                // Если не вошел
+                document.getElementById('auth-buttons').style.display = 'block';
+                document.getElementById('game-buttons').style.display = 'none';
+            }
+        }
+
+        // Открытие/закрытие окна
+        function openModal(mode) {
+            switchTab(mode);
+            document.getElementById('auth-modal').style.display = 'flex';
+        }
+
+        function closeModal() {
+            document.getElementById('auth-modal').style.display = 'none';
+            document.getElementById('auth-error').style.display = 'none';
+            document.getElementById('auth-form').reset();
+        }
+
+        // Переключение вкладок
+        function switchTab(mode) {
+            currentMode = mode;
+            const tabLogin = document.getElementById('tab-login');
+            const tabReg = document.getElementById('tab-register');
+            const nameField = document.getElementById('name-field');
+            const submitBtn = document.getElementById('submit-btn');
+
+            if (mode === 'login') {
+                tabLogin.classList.add('active');
+                tabReg.classList.remove('active');
+                nameField.style.display = 'none';
+                submitBtn.innerText = 'Войти';
+            } else {
+                tabLogin.classList.remove('active');
+                tabReg.classList.add('active');
+                nameField.style.display = 'block';
+                submitBtn.innerText = 'Создать аккаунт';
+            }
+        }
+
+        // Обработка формы
+        async function handleAuth(e) {
+            e.preventDefault();
+            const email = document.getElementById('auth-email').value;
+            const password = document.getElementById('auth-password').value;
+            const name = document.getElementById('reg-name').value;
+            const errorDiv = document.getElementById('auth-error');
+            const submitBtn = document.getElementById('submit-btn');
+
+            errorDiv.style.display = 'none';
+            submitBtn.innerText = 'Загрузка...';
+            submitBtn.disabled = true;
+
+            try {
+                if (currentMode === 'register') {
+                    const { data, error } = await supabase.auth.signUp({
+                        email: email,
+                        password: password,
+                        options: {
+                            data: { display_name: name }
+                        }
+                    });
+                    if (error) throw error;
+                    
+                    // Если подтверждение почты выключено, сессия создастся сразу
+                    if (data.session) {
+                        closeModal();
+                        updateUI(data.session);
+                    } else {
+                        alert('Успех! Проверьте почту для подтверждения.');
+                        closeModal();
+                    }
+                } else {
+                    const { data, error } = await supabase.auth.signInWithPassword({
+                        email: email,
+                        password: password
+                    });
+                    if (error) throw error;
+                    
+                    closeModal();
+                    updateUI(data.session);
+                }
+            } catch (err) {
+                errorDiv.innerText = err.message;
+                errorDiv.style.display = 'block';
+            } finally {
+                submitBtn.innerText = currentMode === 'login' ? 'Войти' : 'Создать аккаунт';
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Выход
+        async function logout() {
+            await supabase.auth.signOut();
+            updateUI(null);
+        }
+
+        // Запускаем проверку при старте
+        checkSession();
+    </script>
 </body>
 </html>
