@@ -1739,5 +1739,94 @@ h(Math,"asinh",xr.asinh,Math.asinh(1e300)===Infinity);h(Math,"atanh",xr.atanh,Ma
 ;require("harlowe")}());
 </script>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+    const SUPABASE_URL = 'https://uhzevhbqsbqfpynbhngr.supabase.co';
+    const SUPABASE_KEY = 'ВСТАВЬ_СЮДА_СВОЙ_ПУБЛИЧНЫЙ_КЛЮЧ';
+    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    
+    // Создаем скрытый контейнер для передачи данных в Harlowe
+    const container = document.createElement('div');
+    container.id = 'save-data-container';
+    container.style.display = 'none';
+    document.body.appendChild(container);
+
+    let currentUser = null;
+
+    async function initGameSave() {
+        const { data: { session } } = await db.auth.getSession();
+        if (session) {
+            currentUser = session.user;
+            const { data } = await db.from('progress').select('flags').eq('user_id', currentUser.id).eq('chapter', 'chapter1').single();
+            
+            if (data && data.flags) {
+                // Кладем JSON-строку в скрытый div
+                container.innerText = JSON.stringify(data.flags);
+                
+                if (!sessionStorage.getItem('reloaded')) {
+                    sessionStorage.setItem('reloaded', 'true');
+                    window.location.reload();
+                }
+            }
+        }
+        setTimeout(addSaveButton, 1000);
+    }
+
+    function getHarloweVariables() {
+        const v = window.State.variables;
+        return {
+            hp: v.hp, eda: v.eda, lyudi: v.lyudi, derevo: v.derevo,
+            ash: v.ash, debt: v.debt, loyalty: v.loyalty, sparks: v.sparks,
+            ssora_bila: v.ssora_bila, ach_olven: v.ach_olven, ach_urg: v.ach_urg,
+            ach_grakh: v.ach_grakh, pop_olven: v.pop_olven, pop_urg: v.pop_urg,
+            pop_grakh: v.pop_grakh, grakh_weapon: v.grakh_weapon,
+            enemy_hp: v.enemy_hp, rab_smert: v.rab_smert,
+            ach_spas: v.ach_spas, pop_spas: v.pop_spas,
+            ach_edvin: v.ach_edvin, pop_edvin: v.pop_edvin,
+            ach_edvin_dead: v.ach_edvin_dead, pop_edvin_dead: v.pop_edvin_dead
+        };
+    }
+
+    async function saveGame() {
+        if (!currentUser) { alert("Войдите в аккаунт!"); return; }
+        const flags = getHarloweVariables();
+        const btn = document.getElementById('save-btn');
+        btn.innerText = "⏳..."; btn.disabled = true;
+        try {
+            await db.from('progress').upsert({
+                user_id: currentUser.id, chapter: 'chapter1', flags: flags, completed: false, saved_at: new Date()
+            }, { onConflict: 'user_id, chapter' });
+            
+            await syncAchievements(flags);
+            
+            btn.innerText = "✅ Сохранено!";
+            setTimeout(() => { btn.innerText = "💾 Сохранить"; btn.disabled = false; }, 2000);
+        } catch (error) {
+            alert("Ошибка: " + error.message); btn.innerText = "💾 Сохранить"; btn.disabled = false;
+        }
+    }
+
+    async function syncAchievements(flags) {
+        const achKeys = ['ach_olven', 'ach_urg', 'ach_grakh', 'ach_spas', 'ach_edvin', 'ach_edvin_dead'];
+        for (let key of achKeys) {
+            if (flags[key] === true) {
+                await db.from('achievements').upsert({
+                    user_id: currentUser.id, achievement_key: key, unlocked_at: new Date()
+                }, { onConflict: 'user_id, achievement_key' });
+            }
+        }
+    }
+
+    function addSaveButton() {
+        if (document.getElementById('save-btn')) return;
+        const btn = document.createElement('button');
+        btn.id = 'save-btn'; btn.innerText = "💾 Сохранить";
+        btn.style.cssText = "position:fixed; top:10px; right:10px; z-index:9999; padding:10px 15px; background:#c96a3a; color:#fff; border:none; border-radius:5px; cursor:pointer; font-family:'Inter', sans-serif; font-weight:bold; box-shadow: 0 4px 10px rgba(0,0,0,0.5);";
+        btn.onclick = saveGame;
+        document.body.appendChild(btn);
+    }
+
+    initGameSave();
+   </script>
 </body>
 </html>
