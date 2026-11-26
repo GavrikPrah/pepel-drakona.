@@ -1773,6 +1773,7 @@ h(Math,"asinh",xr.asinh,Math.asinh(1e300)===Infinity);h(Math,"atanh",xr.atanh,Ma
     let currentUser = null;
 
     setTimeout(async () => {
+        // 1. Первичная проверка сессии для загрузки сохранения
         const { data: { session } } = await db.auth.getSession();
         if (session) {
             currentUser = session.user;
@@ -1786,13 +1787,26 @@ h(Math,"asinh",xr.asinh,Math.asinh(1e300)===Infinity);h(Math,"atanh",xr.atanh,Ma
             }
         }
 
+        // 2. Создаем кнопку
         var btn = document.createElement('button');
         btn.id = 'save-btn'; 
         btn.innerText = "💾 Сохранить";
         btn.style.cssText = "position:fixed; top:10px; right:10px; z-index:9999; padding:10px 15px; background:#c96a3a; color:#fff; border:none; border-radius:5px; cursor:pointer; font-family:'Inter', sans-serif; font-weight:bold;";
+        
         btn.onclick = async function() {
-            if (!currentUser) { alert("Войдите в аккаунт!"); return; }
-            if (!window.State || !window.State.variables) { alert("Игра еще не загрузилась!"); return; }
+            // ЖЕСТКАЯ ПРОВЕРКА СЕССИИ В МОМЕНТ КЛИКА
+            const { data: { session: currentSession } } = await db.auth.getSession();
+            
+            if (!currentSession) { 
+                alert("Вы не вошли в аккаунт! Вернитесь на главную и войдите."); 
+                return; 
+            }
+            currentUser = currentSession.user;
+
+            if (!window.State || !window.State.variables) { 
+                alert("Игра еще не загрузилась, подождите!"); 
+                return; 
+            }
 
             const v = window.State.variables;
             const flags = {
@@ -1807,7 +1821,9 @@ h(Math,"asinh",xr.asinh,Math.asinh(1e300)===Infinity);h(Math,"atanh",xr.atanh,Ma
                 ach_edvin_dead: v.ach_edvin_dead, pop_edvin_dead: v.pop_edvin_dead
             };
 
-            btn.innerText = "⏳..."; btn.disabled = true;
+            btn.innerText = "⏳..."; 
+            btn.disabled = true;
+
             try {
                 await db.from('progress').upsert({
                     user_id: currentUser.id, chapter: 'chapter1', flags: flags, completed: false, saved_at: new Date()
@@ -1821,13 +1837,16 @@ h(Math,"asinh",xr.asinh,Math.asinh(1e300)===Infinity);h(Math,"atanh",xr.atanh,Ma
                         }, { onConflict: 'user_id, achievement_key' });
                     }
                 }
+                
                 btn.innerText = "✅ Сохранено!";
                 setTimeout(() => { btn.innerText = "💾 Сохранить"; btn.disabled = false; }, 2000);
             } catch (error) {
                 alert("Ошибка: " + error.message); 
-                btn.innerText = "💾 Сохранить"; btn.disabled = false;
+                btn.innerText = "💾 Сохранить"; 
+                btn.disabled = false;
             }
         };
+        
         document.body.appendChild(btn);
     }, 1000);
 </script>
