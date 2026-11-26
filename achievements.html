@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Достижения | ПЕПЕЛ ДРАКОНА</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root {
+            --bg-color: #0d0b0a;
+            --text-color: #e8e0d8;
+            --accent-color: #c96a3a;
+            --panel-bg: #1a1614;
+            --locked: #333;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: 'Inter', sans-serif;
+            background-image: radial-gradient(circle at 50% 0%, #2a1f1a 0%, #0d0b0a 70%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        h1, h2 {
+            font-family: 'Cinzel', serif;
+        }
+
+        .container {
+            max-width: 800px;
+            width: 100%;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #333;
+            padding-bottom: 1rem;
+            margin-bottom: 2rem;
+        }
+
+        .back-btn {
+            color: #aaa;
+            text-decoration: none;
+            font-family: 'Cinzel', serif;
+            transition: color 0.3s;
+        }
+
+        .back-btn:hover {
+            color: var(--accent-color);
+        }
+
+        .ach-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .ach-card {
+            background-color: var(--panel-bg);
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            transition: transform 0.2s;
+        }
+
+        .ach-card.unlocked {
+            border-color: var(--accent-color);
+            box-shadow: 0 0 15px rgba(201, 106, 58, 0.1);
+        }
+
+        .ach-icon {
+            width: 50px;
+            height: 50px;
+            background-color: #222;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .ach-card.unlocked .ach-icon {
+            background-color: var(--accent-color);
+            color: #fff;
+        }
+
+        .ach-info h3 {
+            margin: 0 0 0.3rem 0;
+            font-size: 1rem;
+            color: #eee;
+            font-family: 'Cinzel', serif;
+        }
+
+        .ach-info p {
+            margin: 0;
+            font-size: 0.85rem;
+            color: #888;
+            line-height: 1.4;
+        }
+
+        .ach-card.unlocked .ach-info p {
+            color: #ccc;
+        }
+
+        .loading {
+            text-align: center;
+            color: #888;
+            font-style: italic;
+            margin-top: 2rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>Достижения</h1>
+            <a href="index.html" class="back-btn">&larr; На главную</a>
+        </div>
+
+        <div class="ach-grid" id="achievements-list">
+            <div class="loading">Загрузка достижений...</div>
+        </div>
+    </div>
+
+    <script>
+        // ТВОИ НОВЫЕ КЛЮЧИ ИЗ ИРЛАНДИИ
+        const SUPABASE_URL = 'https://uhzevhbqsbgfpynbhngr.supabase.co';
+        const SUPABASE_KEY = 'sb_publishable_rHT6cJEIwd5E9i71WLlllg_aH1Vtkc1';
+        const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        // СПИСОК ТВОИХ ДОСТИЖЕНИЙ
+        const ALL_ACHIEVEMENTS = [
+            { key: 'ach_olven', title: 'Холодный расчёт', desc: 'Вы убили Ольвена не дрогнув.', icon: '❄️' },
+            { key: 'ach_urg', title: 'Милосердие Тьмы', desc: 'Вы спасли жизнь Ургу.', icon: '🕊️' },
+            { key: 'ach_grakh', title: 'Право на трон', desc: 'Вы выяснили, что орки видят в вас будущего владыку.', icon: '👑' },
+            { key: 'ach_spas', title: 'Спаситель', desc: 'Вы вытащили людей из клеток.', icon: '🔗' },
+            { key: 'ach_edvin', title: 'Хладнокровный политик', desc: 'Вы оставили Эдвина в живых.', icon: '🤝' },
+            { key: 'ach_edvin_dead', title: 'Справедливость', desc: 'Вы покарали работорговца.', icon: '⚖️' }
+        ];
+
+        async function loadAchievements() {
+            const listDiv = document.getElementById('achievements-list');
+            
+            // Проверяем, вошел ли игрок
+            const { data: { session } } = await db.auth.getSession();
+            
+            let unlockedKeys = [];
+            
+            if (session) {
+                // Если вошел, тянем его достижения из базы
+                const { data } = await db
+                    .from('achievements')
+                    .select('achievement_key')
+                    .eq('user_id', session.user.id);
+                    
+                if (data) {
+                    unlockedKeys = data.map(item => item.achievement_key);
+                }
+            }
+
+            // Рисуем карточки
+            listDiv.innerHTML = '';
+            
+            ALL_ACHIEVEMENTS.forEach(ach => {
+                const isUnlocked = unlockedKeys.includes(ach.key);
+                
+                const card = document.createElement('div');
+                card.className = `ach-card ${isUnlocked ? 'unlocked' : ''}`;
+                
+                card.innerHTML = `
+                    <div class="ach-icon">${isUnlocked ? ach.icon : '🔒'}</div>
+                    <div class="ach-info">
+                        <h3>${isUnlocked ? ach.title : '???'}</h3>
+                        <p>${isUnlocked ? ach.desc : 'Достижение не открыто'}</p>
+                    </div>
+                `;
+                listDiv.appendChild(card);
+            });
+        }
+
+        loadAchievements();
+    </script>
+</body>
+</html>
