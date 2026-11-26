@@ -330,7 +330,16 @@
             updateUI(null);
         }
 
-        checkSession();
+    async function goToGame() {
+    const { data: { session } } = await db.auth.getSession();
+    if (session) {
+        // Если есть сессия, переходим в игру
+        window.location.href = 'game.html';
+    } else {
+        alert("Ошибка сессии. Пожалуйста, войдите заново.");
+    }
+}
+    checkSession();
     </script>
 </body>
 </html>
