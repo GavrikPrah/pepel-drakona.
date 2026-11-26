@@ -1773,6 +1773,12 @@ h(Math,"asinh",xr.asinh,Math.asinh(1e300)===Infinity);h(Math,"atanh",xr.atanh,Ma
     }
 
     function getHarloweVariables() {
+        // Проверка: если Harlowe еще не загрузился, возвращаем пустой объект
+        if (!window.State || !window.State.variables) {
+            console.warn("Harlowe еще не загрузился, переменные недоступны.");
+            return {};
+        }
+
         const v = window.State.variables;
         return {
             hp: v.hp, eda: v.eda, lyudi: v.lyudi, derevo: v.derevo,
@@ -1786,7 +1792,11 @@ h(Math,"asinh",xr.asinh,Math.asinh(1e300)===Infinity);h(Math,"atanh",xr.atanh,Ma
             ach_edvin_dead: v.ach_edvin_dead, pop_edvin_dead: v.pop_edvin_dead
         };
     }
-
+        const flags = getHarloweVariables();
+        if (Object.keys(flags).length === 0) {
+            alert("Игра еще загружается, подождите секунду...");
+            return;
+        }
     async function saveGame() {
         if (!currentUser) { alert("Войдите в аккаунт!"); return; }
         const flags = getHarloweVariables();
