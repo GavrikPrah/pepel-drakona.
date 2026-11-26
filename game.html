@@ -9,8 +9,7 @@
 </head>
 <body>
 <tw-story><noscript><tw-noscript>JavaScript needs to be enabled to play Пепел дракона.</tw-noscript></noscript></tw-story>
-<tw-storydata name="Пепел дракона" startnode="1" creator="Twine" creator-version="2.12.1" format="Harlowe" format-version="3.3.9" ifid="C26600CB-C597-49AD-806A-B33A1EE5B5F4" options="" tags="" zoom="1" hidden><style role="stylesheet" id="twine-user-stylesheet" type="text/twine-css"></style><script role="script" id="twine-user-script" type="text/twine-javascript"></script><tw-passagedata pid="1" name="[СГ] Пролог 1" tags="" position="25,279" size="100,100">(set: $hp to 10)
-Листайте в низ.
+<tw-storydata name="Пепел дракона" startnode="1" creator="Twine" creator-version="2.12.1" format="Harlowe" format-version="3.3.9" ifid="C26600CB-C597-49AD-806A-B33A1EE5B5F4" options="" tags="" zoom="1" hidden><style role="stylesheet" id="twine-user-stylesheet" type="text/twine-css"></style><script role="script" id="twine-user-script" type="text/twine-javascript"></script><tw-tag name="startup" color="yellow"></tw-tag><tw-tag name="footer" color="purple"></tw-tag><tw-passagedata pid="1" name="[СГ] Пролог 1" tags="" position="25,279" size="100,100">(set: $hp to 10)
 (set: $hp to 10)
 (set: $eda to 10)
 (set: $lyudi to 0)
@@ -1744,7 +1743,60 @@
 
 Глава первая на этом заканчивается. Но история только начинается. Увидимся во второй главе, дорогой читатель.
 
-[[Конец первой главы]]</tw-passagedata></tw-storydata>
+[[Конец первой главы]]</tw-passagedata><tw-passagedata pid="111" name="Инициализация сохранений" tags="startup" position="1265.5,173.5" size="100,100">&lt;script&gt;
+// Ждём, пока JS в game.html положит сохранение в #harlowe-load
+var tries = 0;
+var interval = setInterval(function() {
+    var el = document.getElementById(&#39;harlowe-load&#39;);
+    if (el &amp;&amp; el.textContent) {
+        try {
+            var data = JSON.parse(el.textContent);
+            if (data.hp !== undefined) $hp = data.hp;
+            if (data.eda !== undefined) $eda = data.eda;
+            if (data.lyudi !== undefined) $lyudi = data.lyudi;
+            if (data.derevo !== undefined) $derevo = data.derevo;
+            if (data.ash !== undefined) $ash = data.ash;
+            if (data.debt !== undefined) $debt = data.debt;
+            if (data.loyalty !== undefined) $loyalty = data.loyalty;
+            if (data.sparks !== undefined) $sparks = data.sparks;
+            if (data.ssora_bila !== undefined) $ssora_bila = data.ssora_bila;
+            if (data.ach_olven !== undefined) $ach_olven = data.ach_olven;
+            if (data.ach_urg !== undefined) $ach_urg = data.ach_urg;
+            if (data.ach_grakh !== undefined) $ach_grakh = data.ach_grakh;
+            if (data.pop_olven !== undefined) $pop_olven = data.pop_olven;
+            if (data.pop_urg !== undefined) $pop_urg = data.pop_urg;
+            if (data.pop_grakh !== undefined) $pop_grakh = data.pop_grakh;
+            if (data.grakh_weapon !== undefined) $grakh_weapon = data.grakh_weapon;
+            if (data.enemy_hp !== undefined) $enemy_hp = data.enemy_hp;
+            if (data.rab_smert !== undefined) $rab_smert = data.rab_smert;
+            if (data.ach_spas !== undefined) $ach_spas = data.ach_spas;
+            if (data.pop_spas !== undefined) $pop_spas = data.pop_spas;
+            if (data.ach_edvin !== undefined) $ach_edvin = data.ach_edvin;
+            if (data.pop_edvin !== undefined) $pop_edvin = data.pop_edvin;
+            if (data.ach_edvin_dead !== undefined) $ach_edvin_dead = data.ach_edvin_dead;
+            if (data.pop_edvin_dead !== undefined) $pop_edvin_dead = data.pop_edvin_dead;
+            clearInterval(interval);
+            console.log(&#39;Сохранение применено в Harlowe&#39;);
+        } catch(e) {
+            console.error(&#39;Ошибка парсинга сохранения:&#39;, e);
+            clearInterval(interval);
+        }
+    }
+    if (++tries &gt; 40) clearInterval(interval); // 10 секунд
+}, 250);
+&lt;/script&gt;</tw-passagedata><tw-passagedata pid="112" name="Обновление данных" tags="footer" position="1257.5,298.5" size="100,100">&lt;script&gt;
+document.getElementById(&#39;harlowe-save&#39;).textContent = JSON.stringify({
+    hp: $hp, eda: $eda, lyudi: $lyudi, derevo: $derevo,
+    ash: $ash, debt: $debt, loyalty: $loyalty, sparks: $sparks,
+    ssora_bila: $ssora_bila, ach_olven: $ach_olven, ach_urg: $ach_urg,
+    ach_grakh: $ach_grakh, pop_olven: $pop_olven, pop_urg: $pop_urg,
+    pop_grakh: $pop_grakh, grakh_weapon: $grakh_weapon,
+    enemy_hp: $enemy_hp, rab_smert: $rab_smert,
+    ach_spas: $ach_spas, pop_spas: $pop_spas,
+    ach_edvin: $ach_edvin, pop_edvin: $pop_edvin,
+    ach_edvin_dead: $ach_edvin_dead, pop_edvin_dead: $pop_edvin_dead
+});
+&lt;/script&gt;</tw-passagedata></tw-storydata>
 <script title="Twine engine code" data-main="harlowe">(function(){"use strict";
 var require,define;!function(){var e={},r={};require=function(i){var n=e[i];return n&&(r[i]=n[1].apply(void 0,n[0].map(require)),e[i]=void 0),r[i]},(define=function(r,i,n){if("function"==typeof r)return r();e[r]=[i,n]}).amd=!0}();/*!
  * https://github.com/paulmillr/es6-shim
@@ -1766,84 +1818,68 @@ h(Math,"asinh",xr.asinh,Math.asinh(1e300)===Infinity);h(Math,"atanh",xr.atanh,Ma
 <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-    const SUPABASE_URL = 'https://klsgzyzzfydnmhwoqpry.supabase.co';
+    const SUPABASE_URL = 'https://uhzevhbqsbgfpynbhngr.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_rHT6cJEIwd5E9i71WLlllg_aH1Vtkc1';
     const db = createClient(SUPABASE_URL, SUPABASE_KEY);
 
     let currentUser = null;
 
-    // ---------- утилиты ----------
-
+    // Ожидание сессии
     async function waitForSession(retries = 10, delay = 500) {
         for (let i = 0; i < retries; i++) {
-            const { data: { session }, error } = await db.auth.getSession();
-            if (error) console.warn('getSession error:', error);
+            const { data: { session } } = await db.auth.getSession();
             if (session) return session;
             await new Promise(r => setTimeout(r, delay));
         }
         return null;
     }
 
-    async function waitForState(retries = 20, delay = 250) {
+    // Ожидание данных из Harlowe
+    async function waitForHarloweVars(retries = 20, delay = 250) {
         for (let i = 0; i < retries; i++) {
-            if (window.State && window.State.variables) return true;
+            const el = document.getElementById('harlowe-save');
+            if (el && el.textContent) {
+                try {
+                    const parsed = JSON.parse(el.textContent);
+                    if (parsed && Object.keys(parsed).length > 0) return parsed;
+                } catch(e) {}
+            }
             await new Promise(r => setTimeout(r, delay));
         }
-        return false;
+        return null;
     }
-
-    function applyFlagsToHarlowe(flags) {
-        if (!window.State || !window.State.variables) return false;
-        const v = window.State.variables;
-        for (const key of Object.keys(flags)) {
-            if (flags[key] !== undefined && flags[key] !== null) {
-                v[key] = flags[key];
-            }
-        }
-        if (window.Engine && typeof window.Engine.show === 'function') {
-            try { window.Engine.show(); } catch (e) { console.warn('Engine.show failed:', e); }
-        }
-        return true;
-    }
-
-    // ---------- инициализация ----------
 
     (async () => {
         const session = await waitForSession();
+        
         if (session) {
             currentUser = session.user;
-            console.log('Сессия найдена:', currentUser.id);
+            console.log('Авторизация OK. UID:', currentUser.id);
 
-            try {
-                const { data, error } = await db
-                    .from('progress')
-                    .select('flags')
-                    .eq('user_id', currentUser.id)
-                    .eq('chapter', 'chapter1')
-                    .maybeSingle();
+            // Загрузка сохранения из Supabase
+            const { data, error } = await db
+                .from('progress')
+                .select('flags')
+                .eq('user_id', currentUser.id)
+                .eq('chapter', 'chapter1')
+                .maybeSingle();
 
-                if (error) {
-                    console.warn('Ошибка чтения progress:', error.message);
-                } else if (data && data.flags) {
-                    const ok = await waitForState();
-                    if (ok) {
-                        applyFlagsToHarlowe(data.flags);
-                        console.log('Сохранение применено к Harlowe');
-                    } else {
-                        console.warn('Harlowe не инициализировался, flags не применены');
-                    }
+            if (error) {
+                console.warn('Ошибка загрузки сохранения (RLS?):', error.message);
+            } else if (data && data.flags) {
+                // Кладём данные в контейнер, который читает Harlowe
+                const loadEl = document.getElementById('harlowe-load');
+                if (loadEl) {
+                    loadEl.textContent = JSON.stringify(data.flags);
+                    console.log('Сохранение передано в Harlowe');
                 }
-            } catch (e) {
-                console.warn('Исключение при загрузке progress:', e);
             }
         } else {
-            console.warn('Сессия не найдена после ожидания');
+            console.warn('Пользователь не авторизован');
         }
 
         createSaveButton();
     })();
-
-    // ---------- кнопка сохранения ----------
 
     function createSaveButton() {
         if (document.getElementById('save-btn')) return;
@@ -1851,48 +1887,28 @@ h(Math,"asinh",xr.asinh,Math.asinh(1e300)===Infinity);h(Math,"atanh",xr.atanh,Ma
         const btn = document.createElement('button');
         btn.id = 'save-btn';
         btn.innerText = "💾 Сохранить";
-        btn.style.cssText = "position:fixed; top:10px; right:10px; z-index:9999; padding:10px 15px; background:#c96a3a; color:#fff; border:none; border-radius:5px; cursor:pointer; font-family:'Inter', sans-serif; font-weight:bold;";
+        btn.style.cssText = "position:fixed; top:10px; right:10px; z-index:9999; padding:10px 15px; background:#c96a3a; color:#fff; border:none; border-radius:5px; cursor:pointer; font-family:'Inter', sans-serif; font-weight:bold; box-shadow: 0 4px 6px rgba(0,0,0,0.3);";
 
         btn.onclick = async function () {
             btn.disabled = true;
             btn.innerText = "⏳...";
-
-            const reset = () => {
-                btn.innerText = "💾 Сохранить";
-                btn.disabled = false;
-            };
+            const reset = () => { btn.innerText = "💾 Сохранить"; btn.disabled = false; };
 
             try {
-                const { data: { session }, error: sessErr } = await db.auth.getSession();
-                if (sessErr) throw sessErr;
+                const { data: { session } } = await db.auth.getSession();
                 if (!session) {
                     alert("Сессия не найдена. Войдите заново.");
-                    reset();
-                    return;
+                    return reset();
                 }
                 const user = session.user;
-                currentUser = user;
 
-                const stateReady = await waitForState();
-                if (!stateReady || !window.State || !window.State.variables) {
+                const flags = await waitForHarloweVars();
+                if (!flags) {
                     alert("Игра еще загружается... Попробуйте через секунду.");
-                    reset();
-                    return;
+                    return reset();
                 }
 
-                const v = window.State.variables;
-                const flags = {
-                    hp: v.hp, eda: v.eda, lyudi: v.lyudi, derevo: v.derevo,
-                    ash: v.ash, debt: v.debt, loyalty: v.loyalty, sparks: v.sparks,
-                    ssora_bila: v.ssora_bila, ach_olven: v.ach_olven, ach_urg: v.ach_urg,
-                    ach_grakh: v.ach_grakh, pop_olven: v.pop_olven, pop_urg: v.pop_urg,
-                    pop_grakh: v.pop_grakh, grakh_weapon: v.grakh_weapon,
-                    enemy_hp: v.enemy_hp, rab_smert: v.rab_smert,
-                    ach_spas: v.ach_spas, pop_spas: v.pop_spas,
-                    ach_edvin: v.ach_edvin, pop_edvin: v.pop_edvin,
-                    ach_edvin_dead: v.ach_edvin_dead, pop_edvin_dead: v.pop_edvin_dead
-                };
-
+                // Сохраняем прогресс
                 const { error: progErr } = await db.from('progress').upsert({
                     user_id: user.id,
                     chapter: 'chapter1',
@@ -1903,15 +1919,15 @@ h(Math,"asinh",xr.asinh,Math.asinh(1e300)===Infinity);h(Math,"atanh",xr.atanh,Ma
 
                 if (progErr) throw new Error('progress: ' + progErr.message);
 
+                // Сохраняем достижения
                 const achKeys = ['ach_olven', 'ach_urg', 'ach_grakh', 'ach_spas', 'ach_edvin', 'ach_edvin_dead'];
                 for (const key of achKeys) {
                     if (flags[key] === true) {
-                        const { error: achErr } = await db.from('achievements').upsert({
+                        await db.from('achievements').upsert({
                             user_id: user.id,
                             achievement_key: key,
                             unlocked_at: new Date().toISOString()
                         }, { onConflict: 'user_id,achievement_key' });
-                        if (achErr) console.warn('achievement ' + key + ':', achErr.message);
                     }
                 }
 
@@ -1928,18 +1944,13 @@ h(Math,"asinh",xr.asinh,Math.asinh(1e300)===Infinity);h(Math,"atanh",xr.atanh,Ma
         document.body.appendChild(btn);
     }
 
-    // ---------- реакция на смену авторизации ----------
-
+    // Слежение за авторизацией
     db.auth.onAuthStateChange((event, session) => {
-        if (session) {
-            currentUser = session.user;
-        } else {
-            currentUser = null;
-        }
+        if (session) currentUser = session.user;
+        else currentUser = null;
     });
 </script>
+</body>
 <div id="harlowe-save" style="display:none;"></div>
 <div id="harlowe-load" style="display:none;"></div>
-</body>
 </html>
-
