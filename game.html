@@ -1818,7 +1818,9 @@ h(Math,"asinh",xr.asinh,Math.asinh(1e300)===Infinity);h(Math,"atanh",xr.atanh,Ma
             for (let i = 0; i < achKeys.length; i++) {
                 if (flags[achKeys[i]] === true) {
                     await db.from('achievements').upsert({
-                        user_id: currentUser.id, achievement_key: achKeys[i], unlocked_at: new Date()
+                        user_id: currentUser.id, 
+                        achievement_key: achKeys[i], 
+                        unlocked_at: new Date()
                     }, { onConflict: 'user_id, achievement_key' });
                 }
             }
@@ -1833,7 +1835,7 @@ h(Math,"asinh",xr.asinh,Math.asinh(1e300)===Infinity);h(Math,"atanh",xr.atanh,Ma
             btn.innerText = "💾 Сохранить"; 
             btn.disabled = false;
         }
-    }
+    } // <--- ВОТ ЭТА СКОБКА БЫЛА ПРОПУЩЕНА
 
     initGameSave();
 </script>
