@@ -1771,68 +1771,171 @@ h(Math,"asinh",xr.asinh,Math.asinh(1e300)===Infinity);h(Math,"atanh",xr.atanh,Ma
 
     let currentUser = null;
 
-    setTimeout(async () => {
-        const { data: { session } } = await db.auth.getSession();
-        if (session) {
-            currentUser = session.user;
-            const { data } = await db.from('progress').select('flags').eq('user_id', currentUser.id).eq('chapter', 'chapter1').single();
-            if (data && data.flags) {
-                if (!sessionStorage.getItem('reloaded')) {
-                    sessionStorage.setItem('reloaded', 'true');
-                    window.location.reload();
-                }
+    // ---------- утилиты ----------
+
+    async function waitForSession(retries = 10, delay = 500) {
+        for (let i = 0; i < retries; i++) {
+            const { data: { session }, error } = await db.auth.getSession();
+            if (error) console.warn('getSession error:', error);
+            if (session) return session;
+            await new Promise(r => setTimeout(r, delay));
+        }
+        return null;
+    }
+
+    async function waitForState(retries = 20, delay = 250) {
+        for (let i = 0; i < retries; i++) {
+            if (window.State && window.State.variables) return true;
+            await new Promise(r => setTimeout(r, delay));
+        }
+        return false;
+    }
+
+    function applyFlagsToHarlowe(flags) {
+        if (!window.State || !window.State.variables) return false;
+        const v = window.State.variables;
+        for (const key of Object.keys(flags)) {
+            if (flags[key] !== undefined && flags[key] !== null) {
+                v[key] = flags[key];
             }
         }
+        if (window.Engine && typeof window.Engine.show === 'function') {
+            try { window.Engine.show(); } catch (e) { console.warn('Engine.show failed:', e); }
+        }
+        return true;
+    }
 
-        var btn = document.createElement('button');
-        btn.id = 'save-btn'; 
-        btn.innerText = "💾 Сохранить";
-        btn.style.cssText = "position:fixed; top:10px; right:10px; z-index:9999; padding:10px 15px; background:#c96a3a; color:#fff; border:none; border-radius:5px; cursor:pointer; font-family:'Inter', sans-serif; font-weight:bold;";
-        
-        btn.onclick = async function() {
-            if (!currentUser) { alert("Войдите в аккаунт!"); return; }
-            if (!window.State || !window.State.variables) { alert("Игра еще загружается..."); return; }
+    // ---------- инициализация ----------
 
-            const v = window.State.variables;
-            const flags = {
-                hp: v.hp, eda: v.eda, lyudi: v.lyudi, derevo: v.derevo,
-                ash: v.ash, debt: v.debt, loyalty: v.loyalty, sparks: v.sparks,
-                ssora_bila: v.ssora_bila, ach_olven: v.ach_olven, ach_urg: v.ach_urg,
-                ach_grakh: v.ach_grakh, pop_olven: v.pop_olven, pop_urg: v.pop_urg,
-                pop_grakh: v.pop_grakh, grakh_weapon: v.grakh_weapon,
-                enemy_hp: v.enemy_hp, rab_smert: v.rab_smert,
-                ach_spas: v.ach_spas, pop_spas: v.pop_spas,
-                ach_edvin: v.ach_edvin, pop_edvin: v.pop_edvin,
-                ach_edvin_dead: v.ach_edvin_dead, pop_edvin_dead: v.pop_edvin_dead
-            };
-
-            btn.innerText = "⏳..."; 
-            btn.disabled = true;
+    (async () => {
+        const session = await waitForSession();
+        if (session) {
+            currentUser = session.user;
+            console.log('Сессия найдена:', currentUser.id);
 
             try {
-                await db.from('progress').upsert({
-                    user_id: currentUser.id, chapter: 'chapter1', flags: flags, completed: false, saved_at: new Date()
-                }, { onConflict: 'user_id, chapter' });
-                
-                const achKeys = ['ach_olven', 'ach_urg', 'ach_grakh', 'ach_spas', 'ach_edvin', 'ach_edvin_dead'];
-                for (let i = 0; i < achKeys.length; i++) {
-                    if (flags[achKeys[i]] === true) {
-                        await db.from('achievements').upsert({
-                            user_id: currentUser.id, achievement_key: achKeys[i], unlocked_at: new Date()
-                        }, { onConflict: 'user_id, achievement_key' });
+                const { data, error } = await db
+                    .from('progress')
+                    .select('flags')
+                    .eq('user_id', currentUser.id)
+                    .eq('chapter', 'chapter1')
+                    .maybeSingle();
+
+                if (error) {
+                    console.warn('Ошибка чтения progress:', error.message);
+                } else if (data && data.flags) {
+                    const ok = await waitForState();
+                    if (ok) {
+                        applyFlagsToHarlowe(data.flags);
+                        console.log('Сохранение применено к Harlowe');
+                    } else {
+                        console.warn('Harlowe не инициализировался, flags не применены');
                     }
                 }
-                
-                btn.innerText = "✅ Сохранено!";
-                setTimeout(() => { btn.innerText = "💾 Сохранить"; btn.disabled = false; }, 2000);
-            } catch (error) {
-                alert("Ошибка: " + error.message); 
-                btn.innerText = "💾 Сохранить"; 
+            } catch (e) {
+                console.warn('Исключение при загрузке progress:', e);
+            }
+        } else {
+            console.warn('Сессия не найдена после ожидания');
+        }
+
+        createSaveButton();
+    })();
+
+    // ---------- кнопка сохранения ----------
+
+    function createSaveButton() {
+        if (document.getElementById('save-btn')) return;
+
+        const btn = document.createElement('button');
+        btn.id = 'save-btn';
+        btn.innerText = "💾 Сохранить";
+        btn.style.cssText = "position:fixed; top:10px; right:10px; z-index:9999; padding:10px 15px; background:#c96a3a; color:#fff; border:none; border-radius:5px; cursor:pointer; font-family:'Inter', sans-serif; font-weight:bold;";
+
+        btn.onclick = async function () {
+            btn.disabled = true;
+            btn.innerText = "⏳...";
+
+            const reset = () => {
+                btn.innerText = "💾 Сохранить";
                 btn.disabled = false;
+            };
+
+            try {
+                const { data: { session }, error: sessErr } = await db.auth.getSession();
+                if (sessErr) throw sessErr;
+                if (!session) {
+                    alert("Сессия не найдена. Войдите заново.");
+                    reset();
+                    return;
+                }
+                const user = session.user;
+                currentUser = user;
+
+                const stateReady = await waitForState();
+                if (!stateReady || !window.State || !window.State.variables) {
+                    alert("Игра еще загружается... Попробуйте через секунду.");
+                    reset();
+                    return;
+                }
+
+                const v = window.State.variables;
+                const flags = {
+                    hp: v.hp, eda: v.eda, lyudi: v.lyudi, derevo: v.derevo,
+                    ash: v.ash, debt: v.debt, loyalty: v.loyalty, sparks: v.sparks,
+                    ssora_bila: v.ssora_bila, ach_olven: v.ach_olven, ach_urg: v.ach_urg,
+                    ach_grakh: v.ach_grakh, pop_olven: v.pop_olven, pop_urg: v.pop_urg,
+                    pop_grakh: v.pop_grakh, grakh_weapon: v.grakh_weapon,
+                    enemy_hp: v.enemy_hp, rab_smert: v.rab_smert,
+                    ach_spas: v.ach_spas, pop_spas: v.pop_spas,
+                    ach_edvin: v.ach_edvin, pop_edvin: v.pop_edvin,
+                    ach_edvin_dead: v.ach_edvin_dead, pop_edvin_dead: v.pop_edvin_dead
+                };
+
+                const { error: progErr } = await db.from('progress').upsert({
+                    user_id: user.id,
+                    chapter: 'chapter1',
+                    flags: flags,
+                    completed: false,
+                    saved_at: new Date().toISOString()
+                }, { onConflict: 'user_id,chapter' });
+
+                if (progErr) throw new Error('progress: ' + progErr.message);
+
+                const achKeys = ['ach_olven', 'ach_urg', 'ach_grakh', 'ach_spas', 'ach_edvin', 'ach_edvin_dead'];
+                for (const key of achKeys) {
+                    if (flags[key] === true) {
+                        const { error: achErr } = await db.from('achievements').upsert({
+                            user_id: user.id,
+                            achievement_key: key,
+                            unlocked_at: new Date().toISOString()
+                        }, { onConflict: 'user_id,achievement_key' });
+                        if (achErr) console.warn('achievement ' + key + ':', achErr.message);
+                    }
+                }
+
+                btn.innerText = "✅ Сохранено!";
+                setTimeout(reset, 2000);
+
+            } catch (error) {
+                console.error('Save error:', error);
+                alert("Ошибка сохранения: " + (error.message || error));
+                reset();
             }
         };
+
         document.body.appendChild(btn);
-    }, 1000);
+    }
+
+    // ---------- реакция на смену авторизации ----------
+
+    db.auth.onAuthStateChange((event, session) => {
+        if (session) {
+            currentUser = session.user;
+        } else {
+            currentUser = null;
+        }
+    });
 </script>
 </body>
 </html>
