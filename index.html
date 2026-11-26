@@ -186,15 +186,13 @@
         </div>
 
         <div id="game-buttons" style="display: none;">
-        async function goToGame() {
-    // Получаем текущую сессию
-    const { data: { session } } = await db.auth.getSession();
-    
-    if (session) {
-        // Передаем токены в URL
-        window.location.href = `game.html#access_token=${session.access_token}&refresh_token=${session.refresh_token}`;
-    } else {
-        window.location.href = 'game.html';}
+       <div id="auth-buttons">
+            <button class="btn" onclick="openModal('login')">Войти</button>
+            <button class="btn btn-secondary" onclick="openModal('register')">Регистрация</button>
+        </div>
+
+        <div id="game-buttons" style="display: none;">
+           <a href="#" onclick="goToGame(); return false;" class="btn">Открыть Главу 1</a>
             <button class="btn btn-secondary" onclick="logout()">Выйти</button>
             <div class="user-info">Вы вошли как: <span id="user-name">...</span></div>
         </div>       
@@ -202,7 +200,6 @@
             <a href="achievements.html" class="btn btn-secondary" style="font-size: 1rem; padding: 10px 25px;">🏆 Мои достижения</a>
         </div>
     </div>
-
     <div class="footer">Автор: Гаврик Никодимович Прах</div>
 
     <div class="modal" id="auth-modal">
