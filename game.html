@@ -1766,12 +1766,22 @@ h(Math,"asinh",xr.asinh,Math.asinh(1e300)===Infinity);h(Math,"atanh",xr.atanh,Ma
 <script type="module">
     import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
 
-    const SUPABASE_URL = 'https://uhzevhbqsbgfpynbhngr.supabase.co';
+}   const SUPABASE_URL = 'https://uhzevhbqsbgfpynbhngr.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_rHT6cJEIwd5E9i71WLlllg_aH1Vtkc1';
     const db = createClient(SUPABASE_URL, SUPABASE_KEY);
-    
-    let currentUser = null;
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const accessToken = urlParams.get('access_token');
+    const refreshToken = urlParams.get('refresh_token');
+    let currentUser = null;
+    if (accessToken) {
+        await db.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+        });
+        window.history.replaceState({}, document.title, window.location.pathname);
+    }
+    
     setTimeout(async () => {
         // 1. Первичная проверка сессии для загрузки сохранения
         const { data: { session } } = await db.auth.getSession();
