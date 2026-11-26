@@ -1739,15 +1739,19 @@ h(Math,"asinh",xr.asinh,Math.asinh(1e300)===Infinity);h(Math,"atanh",xr.atanh,Ma
 ;require("harlowe")}());
 </tw-passagedata>
 </tw-storydata>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script>
+<script type="module">
+    // Импортируем библиотеку через современный CDN
+    import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
     const SUPABASE_URL = 'https://uhzevhbqsbgfpynbhngr.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_rHT6cJEIwd5E9i71WLlllg_aH1Vtkc1';
-    const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const db = createClient(SUPABASE_URL, SUPABASE_KEY);
     
     let currentUser = null;
 
-    async function initGameSave() {
+    // Ждем, пока игра загрузится
+    setTimeout(async () => {
+        // Проверяем вход
         const { data: { session } } = await db.auth.getSession();
         if (session) {
             currentUser = session.user;
@@ -1760,83 +1764,62 @@ h(Math,"asinh",xr.asinh,Math.asinh(1e300)===Infinity);h(Math,"atanh",xr.atanh,Ma
                 }
             }
         }
-        setTimeout(function() {
-            var btn = document.createElement('button');
-            btn.id = 'save-btn'; 
-            btn.innerText = "💾 Сохранить";
-            btn.style.cssText = "position:fixed; top:10px; right:10px; z-index:9999; padding:10px 15px; background:#c96a3a; color:#fff; border:none; border-radius:5px; cursor:pointer; font-family:'Inter', sans-serif; font-weight:bold;";
-            btn.onclick = saveGame;
-            document.body.appendChild(btn);
-        }, 1500);
-    }
 
-    function getHarloweVariables() {
-        if (!window.State || !window.State.variables) {
-            return {};
-        }
-        const v = window.State.variables;
-        return {
-            hp: v.hp, eda: v.eda, lyudi: v.lyudi, derevo: v.derevo,
-            ash: v.ash, debt: v.debt, loyalty: v.loyalty, sparks: v.sparks,
-            ssora_bila: v.ssora_bila, ach_olven: v.ach_olven, ach_urg: v.ach_urg,
-            ach_grakh: v.ach_grakh, pop_olven: v.pop_olven, pop_urg: v.pop_urg,
-            pop_grakh: v.pop_grakh, grakh_weapon: v.grakh_weapon,
-            enemy_hp: v.enemy_hp, rab_smert: v.rab_smert,
-            ach_spas: v.ach_spas, pop_spas: v.pop_spas,
-            ach_edvin: v.ach_edvin, pop_edvin: v.pop_edvin,
-            ach_edvin_dead: v.ach_edvin_dead, pop_edvin_dead: v.pop_edvin_dead
-        };
-    }
-
-    async function saveGame() {
-        if (!currentUser) { alert("Войдите в аккаунт!"); return; }
-        
-        const flags = getHarloweVariables();
-        
-        if (Object.keys(flags).length === 0) {
-            alert("Игра еще загружается, подождите секунду...");
-            return;
-        }
-        
-        const btn = document.getElementById('save-btn');
-        if (!btn) return;
-        
-        btn.innerText = "⏳..."; 
-        btn.disabled = true;
-        
-        try {
-            await db.from('progress').upsert({
-                user_id: currentUser.id, 
-                chapter: 'chapter1', 
-                flags: flags, 
-                completed: false, 
-                saved_at: new Date()
-            }, { onConflict: 'user_id, chapter' });
+        // Создаем кнопку
+        var btn = document.createElement('button');
+        btn.id = 'save-btn'; 
+        btn.innerText = "💾 Сохранить";
+        btn.style.cssText = "position:fixed; top:10px; right:10px; z-index:9999; padding:10px 15px; background:#c96a3a; color:#fff; border:none; border-radius:5px; cursor:pointer; font-family:'Inter', sans-serif; font-weight:bold;";
+        btn.onclick = async function() {
+            if (!currentUser) { alert("Войдите в аккаунт!"); return; }
             
-            const achKeys = ['ach_olven', 'ach_urg', 'ach_grakh', 'ach_spas', 'ach_edvin', 'ach_edvin_dead'];
-            for (let i = 0; i < achKeys.length; i++) {
-                if (flags[achKeys[i]] === true) {
-                    await db.from('achievements').upsert({
-                        user_id: currentUser.id, 
-                        achievement_key: achKeys[i], 
-                        unlocked_at: new Date()
-                    }, { onConflict: 'user_id, achievement_key' });
-                }
+            if (!window.State || !window.State.variables) {
+                alert("Игра еще не загрузилась, подождите!");
+                return;
             }
-            
-            btn.innerText = "✅ Сохранено!";
-            setTimeout(function() { 
-                btn.innerText = "💾 Сохранить"; 
-                btn.disabled = false; 
-            }, 2000);
-        } catch (error) {
-            alert("Ошибка: " + error.message); 
-            btn.innerText = "💾 Сохранить"; 
-            btn.disabled = false;
-        }
-    }
 
-    initGameSave();
+            const v = window.State.variables;
+            const flags = {
+                hp: v.hp, eda: v.eda, lyudi: v.lyudi, derevo: v.derevo,
+                ash: v.ash, debt: v.debt, loyalty: v.loyalty, sparks: v.sparks,
+                ssora_bila: v.ssora_bila, ach_olven: v.ach_olven, ach_urg: v.ach_urg,
+                ach_grakh: v.ach_grakh, pop_olven: v.pop_olven, pop_urg: v.pop_urg,
+                pop_grakh: v.pop_grakh, grakh_weapon: v.grakh_weapon,
+                enemy_hp: v.enemy_hp, rab_smert: v.rab_smert,
+                ach_spas: v.ach_spas, pop_spas: v.pop_spas,
+                ach_edvin: v.ach_edvin, pop_edvin: v.pop_edvin,
+                ach_edvin_dead: v.ach_edvin_dead, pop_edvin_dead: v.pop_edvin_dead
+            };
+
+            btn.innerText = "⏳..."; 
+            btn.disabled = true;
+
+            try {
+                await db.from('progress').upsert({
+                    user_id: currentUser.id, chapter: 'chapter1', flags: flags, completed: false, saved_at: new Date()
+                }, { onConflict: 'user_id, chapter' });
+                
+                // Сохраняем ачивки
+                const achKeys = ['ach_olven', 'ach_urg', 'ach_grakh', 'ach_spas', 'ach_edvin', 'ach_edvin_dead'];
+                for (let i = 0; i < achKeys.length; i++) {
+                    if (flags[achKeys[i]] === true) {
+                        await db.from('achievements').upsert({
+                            user_id: currentUser.id, achievement_key: achKeys[i], unlocked_at: new Date()
+                        }, { onConflict: 'user_id, achievement_key' });
+                    }
+                }
+
+                btn.innerText = "✅ Сохранено!";
+                setTimeout(() => { btn.innerText = "💾 Сохранить"; btn.disabled = false; }, 2000);
+            } catch (error) {
+                alert("Ошибка: " + error.message); 
+                btn.innerText = "💾 Сохранить"; 
+                btn.disabled = false;
+            }
+        };
+        
+        document.body.appendChild(btn);
+    }, 1000); // Задержка 1 секунда, чтобы Harlowe точно загрузился
 </script>
 </body>
 </html>
