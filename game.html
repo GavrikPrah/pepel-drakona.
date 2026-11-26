@@ -1798,21 +1798,43 @@ h(Math,"asinh",xr.asinh,Math.asinh(1e300)===Infinity);h(Math,"atanh",xr.atanh,Ma
             return;
         }
     async function saveGame() {
-        if (!currentUser) { alert("Войдите в аккаунт!"); return; }
+        if (!currentUser) { 
+            alert("Войдите в аккаунт!"); 
+            return; 
+        }
+        
         const flags = getHarloweVariables();
+        
+        // Проверка, что переменные загрузились
+        if (Object.keys(flags).length === 0) {
+            alert("Игра еще загружается, подождите секунду...");
+            return;
+        }
+        
         const btn = document.getElementById('save-btn');
-        btn.innerText = "⏳..."; btn.disabled = true;
+        btn.innerText = "⏳..."; 
+        btn.disabled = true;
+        
         try {
             await db.from('progress').upsert({
-                user_id: currentUser.id, chapter: 'chapter1', flags: flags, completed: false, saved_at: new Date()
+                user_id: currentUser.id, 
+                chapter: 'chapter1', 
+                flags: flags, 
+                completed: false, 
+                saved_at: new Date()
             }, { onConflict: 'user_id, chapter' });
             
             await syncAchievements(flags);
             
             btn.innerText = "✅ Сохранено!";
-            setTimeout(() => { btn.innerText = "💾 Сохранить"; btn.disabled = false; }, 2000);
+            setTimeout(() => { 
+                btn.innerText = "💾 Сохранить"; 
+                btn.disabled = false; 
+            }, 2000);
         } catch (error) {
-            alert("Ошибка: " + error.message); btn.innerText = "💾 Сохранить"; btn.disabled = false;
+            alert("Ошибка: " + error.message); 
+            btn.innerText = "💾 Сохранить"; 
+            btn.disabled = false;
         }
     }
 
