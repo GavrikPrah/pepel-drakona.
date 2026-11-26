@@ -186,7 +186,15 @@
         </div>
 
         <div id="game-buttons" style="display: none;">
-           <a href="#" onclick="goToGame(); return false;" class="btn">Открыть Главу 1</a>
+        async function goToGame() {
+    // Получаем текущую сессию
+    const { data: { session } } = await db.auth.getSession();
+    
+    if (session) {
+        // Передаем токены в URL
+        window.location.href = `game.html#access_token=${session.access_token}&refresh_token=${session.refresh_token}`;
+    } else {
+        window.location.href = 'game.html';}
             <button class="btn btn-secondary" onclick="logout()">Выйти</button>
             <div class="user-info">Вы вошли как: <span id="user-name">...</span></div>
         </div>       
